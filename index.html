@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gym Control</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background: #f4f5f7; color: #222; }
+    header { background: #1f2937; color: #fff; padding: 16px 24px; }
+    header h1 { margin: 0; font-size: 22px; }
+    main { padding: 24px; }
+    .controles { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+    select { padding: 8px 10px; font-size: 15px; }
+    .tabs button { padding: 8px 16px; font-size: 15px; border: 1px solid #1f2937; background: #fff; cursor: pointer; }
+    .tabs button.activo { background: #1f2937; color: #fff; }
+    .contenedor { overflow-x: auto; background: #fff; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,.15); }
+    table { border-collapse: collapse; width: 100%; font-size: 14px; }
+    th, td { padding: 8px 12px; border-bottom: 1px solid #e5e7eb; text-align: left; white-space: nowrap; }
+    th { background: #e5e7eb; position: sticky; top: 0; }
+    .nulo { color: #9ca3af; font-style: italic; }
+    #info { margin: 8px 0; color: #555; font-size: 14px; }
+    #error { color: #b91c1c; background: #fee2e2; padding: 10px 12px; border-radius: 6px; margin-bottom: 12px; display: none; }
+    pre { background: #111827; color: #e5e7eb; padding: 12px; border-radius: 6px; overflow-x: auto; display: none; }
+  </style>
+</head>
+<body>
+  <header><h1>Gym Control</h1></header>
+  <main>
+    <div class="controles">
+      <div class="tabs">
+        <button id="btn-tablas" class="activo">Tablas</button>
+        <button id="btn-vistas">Vistas</button>
+        <button id="btn-consultas">Consultas</button>
+      </div>
+      <select id="selector"></select>
+    </div>
+    <div id="error"></div>
+    <div id="info"></div>
+    <div class="contenedor"><table id="tabla"></table></div>
+    <pre id="sql"></pre>
+  </main>
+
+  <script>
+    const selector = document.getElementById("selector");
+    const tabla = document.getElementById("tabla");
+    const info = document.getElementById("info");
+    const errorBox = document.getElementById("error");
+    const sqlBox = document.getElementById("sql");
+    const botones = {
+      tablas: document.getElementById("btn-tablas"),
+      vistas: document.getElementById("btn-vistas"),
+      consultas: document.getElementById("btn-consultas"),
+    };
+
+    let objetos = { tablas: [], vistas: [], consultas: [] };
+    let modo = "tablas";
+
+    function mostrarError(mensaje) {
+      errorBox.textContent = mensaje;
+      errorBox.style.display = mensaje ? "block" : "none";
+    }
+
+    function dibujarTabla(filas) {
+      tabla.innerHTML = "";
+      info.textContent = filas.length + " registro(s)";
+      if (filas.length === 0) return;
+
+      const columnas = Object.keys(filas[0]);
+      const encabezado = tabla.createTHead().insertRow();
+      for (const col of columnas) {
+        const th = document.createElement("th");
+        th.textContent = col;
+        encabezado.appendChild(th);
+      }
+
+      const cuerpo = tabla.createTBody();
+      for (const fila of filas) {
+        const tr = cuerpo.insertRow();
+        for (const col of columnas) {
+          const td = tr.insertCell();
+          if (fila[col] === null) {
+            td.textContent = "NULL";
+            td.className = "nulo";
+          } else {
+            td.textContent = fila[col];
+          }
+        }
+      }
+    }
+
+    async function pedir(url) {
+      const respuesta = await fetch(url);
+      const datos = await respuesta.json();
+      if (!respuesta.ok) throw new Error(datos.error || "Error desconocido");
+      return datos;
+    }
+
+    async function cargar() {
+      mostrarError("");
+      sqlBox.style.display = "none";
+      const valor = selector.value;
+      if (!valor) return;
+      try {
+        if (modo === "consultas") {
+          const datos = await pedir("/api/consulta/" + valor);
+          dibujarTabla(datos.filas);
+          sqlBox.textContent = datos.sql;
+          sqlBox.style.display = "block";
+        } else {
+          const datos = await pedir("/api/objeto/" + encodeURIComponent(valor));
+          dibujarTabla(datos.filas);
+        }
+      } catch (error) {
+        tabla.innerHTML = "";
+        info.textContent = "";
+        mostrarError(error.message);
+      }
+    }
+
+    function llenarSelector() {
+      selector.innerHTML = "";
+      const opciones = modo === "consultas"
+        ? objetos.consultas.map(c => ({ valor: c.id, texto: c.titulo }))
+        : objetos[modo].map(n => ({ valor: n, texto: n }));
+      for (const op of opciones) {
+        const option = document.createElement("option");
+        option.value = op.valor;
+        option.textContent = op.texto;
+        selector.appendChild(option);
+      }
+      cargar();
+    }
+
+    function cambiarModo(nuevo) {
+      modo = nuevo;
+      for (const [nombre, boton] of Object.entries(botones)) {
+        boton.classList.toggle("activo", nombre === nuevo);
+      }
+      llenarSelector();
+    }
+
+    for (const nombre of Object.keys(botones)) {
+      botones[nombre].addEventListener("click", () => cambiarModo(nombre));
+    }
+    selector.addEventListener("change", cargar);
+
+    pedir("/api/objetos")
+      .then(datos => { objetos = datos; llenarSelector(); })
+      .catch(error => mostrarError("No se pudo conectar a MySQL: " + error.message));
+  </script>
+</body>
+</html>
