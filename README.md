@@ -32,7 +32,7 @@ Linux:
 sudo mysql < db.sql
 ```
 
-### 2. Instalar Node.js
+### 2. Instalar Node.js y npm
 
 ### 3. Instalar dependencias y ejecutar
 
