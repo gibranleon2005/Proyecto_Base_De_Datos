@@ -1,152 +1,838 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Base De Datos</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sistema Base de Datos</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; background: #f4f5f7; color: #222; }
-    header { background: #1f2937; color: #fff; padding: 16px 24px; }
-    header h1 { margin: 0; font-size: 22px; }
-    main { padding: 24px; }
-    .controles { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
-    select { padding: 8px 10px; font-size: 15px; }
-    .tabs button { padding: 8px 16px; font-size: 15px; border: 1px solid #1f2937; background: #fff; cursor: pointer; }
-    .tabs button.activo { background: #1f2937; color: #fff; }
-    .contenedor { overflow-x: auto; background: #fff; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,.15); }
-    table { border-collapse: collapse; width: 100%; font-size: 14px; }
-    th, td { padding: 8px 12px; border-bottom: 1px solid #e5e7eb; text-align: left; white-space: nowrap; }
-    th { background: #e5e7eb; position: sticky; top: 0; }
-    .nulo { color: #9ca3af; font-style: italic; }
-    #info { margin: 8px 0; color: #555; font-size: 14px; }
-    #error { color: #b91c1c; background: #fee2e2; padding: 10px 12px; border-radius: 6px; margin-bottom: 12px; display: none; }
-    pre { background: #111827; color: #e5e7eb; padding: 12px; border-radius: 6px; overflow-x: auto; display: none; }
+    * { box-sizing: border-box; font-family: Arial, Helvetica, sans-serif; }
+    body { margin: 0; background-color: #f0f2f5; color: #333; }
+
+    /* PANTALLA DE LOGIN */
+    #login-screen {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 1rem;
+    }
+    .login-box {
+      background: #ffffff;
+      padding: 2rem;
+      border-radius: 8px;
+      border: 1px solid #d1d5db;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      width: 100%;
+      max-width: 380px;
+      text-align: center;
+    }
+    .logo-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 0.5rem;
+    }
+    .logo-wrap h1 { margin: 0; font-size: 1.5rem; color: #1e3a8a; }
+    .login-box p.sub { margin-top: 0; font-size: 0.85rem; color: #6b7280; margin-bottom: 1.5rem; }
+    .login-box .field { text-align: left; margin-bottom: 1rem; }
+    .login-box label { display: block; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.3rem; color: #374151; }
+    .login-box input {
+      width: 100%;
+      padding: 0.6rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 5px;
+      font-size: 0.95rem;
+    }
+    .btn-login {
+      width: 100%;
+      padding: 0.7rem;
+      background: #1e3a8a;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .btn-login:hover { background: #1d4ed8; }
+    .credenciales-hint {
+      margin-top: 1.25rem;
+      padding: 0.75rem;
+      background: #f8fafc;
+      border: 1px dashed #cbd5e1;
+      border-radius: 5px;
+      font-size: 0.78rem;
+      text-align: left;
+      color: #475569;
+    }
+
+    /* SISTEMA PRINCIPAL */
+    #app-screen { display: none; }
+    header {
+      background: #1e3a8a;
+      color: white;
+      padding: 0.85rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .brand h2 { margin: 0; font-size: 1.25rem; }
+    .user-info { display: flex; align-items: center; gap: 0.75rem; font-size: 0.88rem; }
+    .role-badge {
+      background: #dbeafe;
+      color: #1e3a8a;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-weight: bold;
+      font-size: 0.78rem;
+    }
+
+    nav {
+      background: #ffffff;
+      border-bottom: 1px solid #d1d5db;
+      padding: 0 1.5rem;
+      display: flex;
+      gap: 0.25rem;
+      overflow-x: auto;
+    }
+    nav button {
+      background: none;
+      border: none;
+      border-bottom: 3px solid transparent;
+      padding: 0.85rem 1rem;
+      font-size: 0.9rem;
+      font-weight: bold;
+      color: #4b5563;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    nav button.active {
+      color: #1e3a8a;
+      border-bottom-color: #1e3a8a;
+    }
+
+    main { max-width: 1150px; margin: 1.5rem auto; padding: 0 1rem; }
+    .tab-section { display: none; }
+    .tab-section.active { display: block; }
+
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
+    .card {
+      background: #ffffff;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      padding: 1.2rem;
+      margin-bottom: 1rem;
+    }
+    .card h3 { margin-top: 0; font-size: 1.05rem; color: #1e3a8a; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.5rem; }
+    .desc { font-size: 0.83rem; color: #6b7280; margin-bottom: 1rem; }
+
+    .form-inline { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: flex-end; margin-bottom: 1rem; }
+    .form-group { display: flex; flex-direction: column; gap: 0.25rem; flex: 1; min-width: 150px; }
+    .form-group label { font-size: 0.8rem; font-weight: bold; color: #374151; }
+    select, input[type="text"], input[type="number"] {
+      padding: 0.5rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      font-size: 0.88rem;
+      background: #fff;
+    }
+
+    button.btn {
+      padding: 0.55rem 0.9rem;
+      border: none;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      font-weight: bold;
+      cursor: pointer;
+      color: white;
+      background: #2563eb;
+    }
+    button.btn:hover { opacity: 0.9; }
+    button.btn-green { background: #16a34a; }
+    button.btn-red { background: #dc2626; }
+    button.btn-amber { background: #d97706; }
+    button.btn-gray { background: #4b5563; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    th, td { padding: 0.6rem; text-align: left; border-bottom: 1px solid #e5e7eb; }
+    th { background: #f8fafc; color: #374151; font-weight: bold; }
+    tr:hover { background: #f9fafb; }
+
+    .tag { padding: 2px 7px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; display: inline-block; }
+    .tag-green { background: #dcfce7; color: #166534; }
+    .tag-red { background: #fee2e2; color: #991b1b; }
+    .tag-amber { background: #fef3c7; color: #92400e; }
+
+    /* ALERTA DE RESULTADO SQL */
+    #sql-alert-box {
+      position: fixed;
+      bottom: 16px;
+      right: 16px;
+      width: 390px;
+      max-width: 92vw;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .alert-msg {
+      padding: 0.85rem 1rem;
+      border-radius: 6px;
+      font-size: 0.84rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      border-left: 5px solid;
+      background: white;
+    }
+    .alert-err { border-color: #dc2626; background: #fef2f2; color: #7f1d1d; }
+    .alert-ok { border-color: #16a34a; background: #f0fdf4; color: #14532d; }
+    .alert-info { border-color: #2563eb; background: #eff6ff; color: #1e3a8a; }
   </style>
 </head>
 <body>
-  <header><h1></h1></header>
-  <main>
-    <div class="controles">
-      <div class="tabs">
-        <button id="btn-tablas" class="activo">Tablas</button>
-        <button id="btn-vistas">Vistas</button>
-        <button id="btn-consultas">Consultas</button>
-      </div>
-      <select id="selector"></select>
+
+<!-- 1. INICIO DE SESIÓN (Tabla: usuario_sistema) -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="logo-wrap">
+      <!-- Logo simple de mancuerna -->
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#1e3a8a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M6.5 6.5h11M6.5 17.5h11M3 10v4M21 10v4M6 7v10M18 7v10M9 12h6"/>
+      </svg>
+      <h1>SISTEMA GIMNASIO</h1>
     </div>
-    <div id="error"></div>
-    <div id="info"></div>
-    <div class="contenedor"><table id="tabla"></table></div>
-    <pre id="sql"></pre>
+    <p class="sub">Sistema de Administración y Control de Acceso</p>
+
+    <div class="field">
+      <label for="loginUser">Usuario del sistema</label>
+      <input type="text" id="loginUser" placeholder="Ej. admin_gibran" />
+    </div>
+    <div class="field">
+      <label for="loginPass">Contraseña</label>
+      <input type="password" id="loginPass" placeholder="••••••••" onkeydown="if(event.key==='Enter') iniciarSesion()" />
+    </div>
+    <button class="btn-login" onclick="iniciarSesion()">Iniciar Sesión</button>
+
+    <div class="credenciales-hint">
+      <strong>Usuarios registrados (tabla <code>usuario_sistema</code>):</strong><br>
+      • Admin: <code>admin_gibran</code> / <code>admin1234</code><br>
+      • Recepción: <code>recep_jorge</code> / <code>recep1234</code>
+    </div>
+  </div>
+</div>
+
+<!-- 2. PANEL PRINCIPAL -->
+<div id="app-screen">
+  <header>
+    <div class="brand">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M6.5 6.5h11M6.5 17.5h11M3 10v4M21 10v4M6 7v10M18 7v10M9 12h6"/>
+      </svg>
+      <h2>SISTEMA GIMNASIO</h2>
+    </div>
+    <div class="user-info">
+      <span>Usuario: <strong id="lblUsuarioActivo"></strong></span>
+      <span class="role-badge" id="lblRolActivo"></span>
+      <button class="btn btn-amber" onclick="reiniciarBD()">Reiniciar Datos</button>
+      <button class="btn btn-gray" onclick="cerrarSesion()">Salir</button>
+    </div>
+  </header>
+
+  <nav>
+    <button class="active" onclick="cambiarTab('tab-acceso', this)">1. Acceso y Clases</button>
+    <button onclick="cambiarTab('tab-membresias', this)">2. Membresías, Pagos y Auditoría</button>
+    <button onclick="cambiarTab('tab-ventas', this)">3. Punto de Venta e Inventario</button>
+    <button onclick="cambiarTab('tab-socios', this)">4. Socios (Historial)</button>
+  </nav>
+
+  <main>
+    <!-- PESTAÑA 1: ACCESO VENCIDO Y SOBRECUPO EN CLASES -->
+    <section id="tab-acceso" class="tab-section active">
+      <div class="grid-2">
+        <div class="card">
+          <h3>Control de Entrada (Validar Membresía)</h3>
+          <p class="desc">Resuelve: <strong>Bloquear el acceso con membresía vencida</strong> (Trigger <code>trg_validar_acceso_socio</code>).</p>
+          <div class="form-inline">
+            <div class="form-group">
+              <label>Socio</label>
+              <select id="selSocioAcceso"></select>
+            </div>
+            <button class="btn btn-green" onclick="registrarEntrada()">Registrar Entrada</button>
+          </div>
+          <table>
+            <thead><tr><th>ID</th><th>Socio</th><th>Hora de Entrada</th></tr></thead>
+            <tbody id="tblAsistencias"></tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <h3>Inscripción a Clases Grupales</h3>
+          <p class="desc">Resuelve: <strong>Evitar sobrecupo en las clases</strong> (Trigger <code>trg_validar_cupo_clase</code>). Prueba <em>Spinning Nocturno VIP</em> (máx. 2).</p>
+          <div class="form-inline">
+            <div class="form-group">
+              <label>Socio</label>
+              <select id="selSocioClase"></select>
+            </div>
+            <div class="form-group">
+              <label>Clase</label>
+              <select id="selClase"></select>
+            </div>
+            <button class="btn" onclick="inscribirClase()">Inscribir</button>
+          </div>
+          <table>
+            <thead><tr><th>Clase</th><th>Día y Hora</th><th>Entrenador</th><th>Cupo</th></tr></thead>
+            <tbody id="tblClases"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- PESTAÑA 2: AUDITORÍA DE MEMBRESÍAS Y PAGOS INMUTABLES -->
+    <section id="tab-membresias" class="tab-section">
+      <div class="grid-2">
+        <div class="card">
+          <h3>Renovar o Contratar Membresía</h3>
+          <p class="desc">Ejecuta procedimiento <code>sp_registrar_suscripcion</code>: vence plan anterior, activa nuevo y registra pago.</p>
+          <div class="form-inline">
+            <div class="form-group">
+              <label>Socio</label>
+              <select id="selSocioPlan"></select>
+            </div>
+            <div class="form-group">
+              <label>Plan</label>
+              <select id="selPlan"></select>
+            </div>
+            <div class="form-group">
+              <label>Método de Pago</label>
+              <select id="selMetodoPlan">
+                <option value="Efectivo">Efectivo</option>
+                <option value="Tarjeta">Tarjeta</option>
+                <option value="Transferencia">Transferencia</option>
+              </select>
+            </div>
+            <button class="btn btn-green" onclick="contratarPlan()">Cobrar Plan</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Historial de Auditoría de Membresías</h3>
+          <p class="desc">Resuelve: <strong>Registrar quién cancela o modifica una membresía para no perder el rastro</strong>.</p>
+          <table>
+            <thead><tr><th>Susc.</th><th>Socio</th><th>Cambio</th><th>Usuario</th><th>Fecha</th></tr></thead>
+            <tbody id="tblAuditoria"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Suscripciones Registradas (Cambia el estado para probar la auditoría)</h3>
+        <table>
+          <thead><tr><th>ID</th><th>Socio</th><th>Plan</th><th>Inicio</th><th>Vencimiento</th><th>Estado</th><th>Modificar Estado</th></tr></thead>
+          <tbody id="tblSuscripciones"></tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h3>Pagos Cobrados</h3>
+        <p class="desc">Resuelve: <strong>Impedir que se alteren o eliminen pagos que ya fueron cobrados</strong> (Triggers de protección).</p>
+        <table>
+          <thead><tr><th>ID Pago</th><th>Susc.</th><th>Socio</th><th>Monto</th><th>Método</th><th>Fecha</th><th>Acciones</th></tr></thead>
+          <tbody id="tblPagos"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- PESTAÑA 3: INVENTARIO EN TIEMPO REAL -->
+    <section id="tab-ventas" class="tab-section">
+      <div class="grid-2">
+        <div class="card">
+          <h3>Caja / Punto de Venta</h3>
+          <p class="desc">Resuelve: <strong>Controlar el inventario en tiempo real para no vender productos agotados</strong>.</p>
+          <div class="form-inline">
+            <div class="form-group">
+              <label>Cliente</label>
+              <select id="selSocioVenta"></select>
+            </div>
+            <div class="form-group">
+              <label>Producto</label>
+              <select id="selProductoVenta"></select>
+            </div>
+            <div class="form-group" style="max-width:90px;">
+              <label>Cantidad</label>
+              <input type="number" id="inpCantidad" value="1" min="1" />
+            </div>
+            <div class="form-group">
+              <label>Pago</label>
+              <select id="selMetodoVenta">
+                <option value="Efectivo">Efectivo</option>
+                <option value="Tarjeta">Tarjeta</option>
+                <option value="Transferencia">Transferencia</option>
+              </select>
+            </div>
+            <button class="btn btn-green" onclick="procesarVenta()">Vender</button>
+          </div>
+          <h4>Últimas Ventas</h4>
+          <table>
+            <thead><tr><th>ID</th><th>Cliente</th><th>Producto</th><th>Cant.</th><th>Total</th><th>Método</th></tr></thead>
+            <tbody id="tblVentas"></tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <h3>Inventario Actual</h3>
+          <table>
+            <thead><tr><th>ID</th><th>Producto</th><th>Categoría</th><th>Precio</th><th>Stock</th><th>Estado</th></tr></thead>
+            <tbody id="tblProductos"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- PESTAÑA 4: PROTECCIÓN DEL HISTORIAL DEL SOCIO -->
+    <section id="tab-socios" class="tab-section">
+      <div class="card">
+        <h3>Registrar Nuevo Socio</h3>
+        <div class="form-inline">
+          <div class="form-group"><label>Nombre</label><input type="text" id="inNombre" placeholder="Nombre" /></div>
+          <div class="form-group"><label>Apellidos</label><input type="text" id="inApellidos" placeholder="Apellidos" /></div>
+          <div class="form-group"><label>Teléfono</label><input type="text" id="inTel" placeholder="6461234567" /></div>
+          <div class="form-group"><label>Correo</label><input type="text" id="inCorreo" placeholder="correo@ejemplo.com" /></div>
+          <button class="btn" onclick="registrarSocio()">Agregar Socio</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Lista de Socios</h3>
+        <p class="desc">Resuelve: <strong>Evitar que se borre el historial de un cliente cuando deje de asistir</strong> (<code>ON DELETE RESTRICT</code>).</p>
+        <table>
+          <thead><tr><th>ID</th><th>Nombre</th><th>Teléfono</th><th>Correo</th><th>Acceso</th><th>Eliminar</th></tr></thead>
+          <tbody id="tblSocios"></tbody>
+        </table>
+      </div>
+    </section>
   </main>
+</div>
 
-  <script>
-    const selector = document.getElementById("selector");
-    const tabla = document.getElementById("tabla");
-    const info = document.getElementById("info");
-    const errorBox = document.getElementById("error");
-    const sqlBox = document.getElementById("sql");
-    const botones = {
-      tablas: document.getElementById("btn-tablas"),
-      vistas: document.getElementById("btn-vistas"),
-      consultas: document.getElementById("btn-consultas"),
+<div id="sql-alert-box"></div>
+
+<script>
+  const usuariosSistema = [
+    { user: 'admin_gibran', pass: 'admin1234', rol: 'Administrador', activo: true },
+    { user: 'recep_jorge', pass: 'recep1234', rol: 'Recepcionista', activo: true },
+    { user: 'recep_laura', pass: 'laura2026', rol: 'Recepcionista', activo: true }
+  ];
+
+  let sesionActual = null;
+  let db = {};
+
+  const hoy = new Date().toISOString().split('T')[0];
+  function sumarDias(dias) {
+    const f = new Date();
+    f.setDate(f.getDate() + dias);
+    return f.toISOString().split('T')[0];
+  }
+
+  function cargarDatosIniciales() {
+    db = {
+      socios: [
+        { id: 1, nombre: 'Carlos', apellidos: 'Mendoza Ruiz', tel: '6461122334', correo: 'carlos.mendoza@email.com' },
+        { id: 2, nombre: 'Ana Sofía', apellidos: 'López Estrada', tel: '6462233445', correo: 'anasofia.lopez@email.com' },
+        { id: 3, nombre: 'Roberto', apellidos: 'Gómez Pineda', tel: '6463344556', correo: 'roberto.gp@email.com' },
+        { id: 4, nombre: 'Valeria', apellidos: 'Torres Castillo', tel: '6464455667', correo: 'valeria.tc@email.com' },
+        { id: 5, nombre: 'Diego', apellidos: 'Ramírez Soto', tel: '6465566778', correo: 'diego.ramirez@email.com' },
+        { id: 6, nombre: 'Fernanda', apellidos: 'Núñez Vega', tel: '6466677889', correo: 'fer.nunez@email.com' }
+      ],
+      planes: [
+        { id: 1, nombre: 'Visita Diaria', dias: 1, precio: 80 },
+        { id: 2, nombre: 'Plan Mensual', dias: 30, precio: 650 },
+        { id: 3, nombre: 'Plan Estudiante Mensual', dias: 30, precio: 500 },
+        { id: 4, nombre: 'Plan Trimestral', dias: 90, precio: 1750 },
+        { id: 5, nombre: 'Plan Anual VIP', dias: 365, precio: 6200 }
+      ],
+      suscripciones: [
+        { id: 1, id_socio: 1, id_plan: 5, inicio: sumarDias(-60), fin: sumarDias(305), estado: 'Activa' },
+        { id: 2, id_socio: 2, id_plan: 3, inicio: sumarDias(-10), fin: sumarDias(20), estado: 'Activa' },
+        { id: 3, id_socio: 3, id_plan: 2, inicio: sumarDias(-45), fin: sumarDias(-15), estado: 'Vencida' },
+        { id: 4, id_socio: 4, id_plan: 4, inicio: sumarDias(-20), fin: sumarDias(70), estado: 'Activa' },
+        { id: 5, id_socio: 5, id_plan: 2, inicio: sumarDias(-5), fin: sumarDias(25), estado: 'Activa' },
+        { id: 6, id_socio: 6, id_plan: 2, inicio: sumarDias(-40), fin: sumarDias(-10), estado: 'Vencida' }
+      ],
+      auditoria: [],
+      pagos: [
+        { id: 1, id_suscripcion: 1, monto: 6200, metodo: 'Tarjeta', fecha: sumarDias(-60) },
+        { id: 2, id_suscripcion: 2, monto: 500, metodo: 'Efectivo', fecha: sumarDias(-10) },
+        { id: 3, id_suscripcion: 3, monto: 650, metodo: 'Transferencia', fecha: sumarDias(-45) },
+        { id: 4, id_suscripcion: 4, monto: 1750, metodo: 'Tarjeta', fecha: sumarDias(-20) },
+        { id: 5, id_suscripcion: 5, monto: 650, metodo: 'Efectivo', fecha: sumarDias(-5) },
+        { id: 6, id_suscripcion: 6, monto: 650, metodo: 'Efectivo', fecha: sumarDias(-40) }
+      ],
+      asistencias: [
+        { id: 1, id_socio: 1, fecha: sumarDias(-1) + ' 08:15:00' },
+        { id: 2, id_socio: 2, fecha: sumarDias(-1) + ' 17:30:00' },
+        { id: 3, id_socio: 4, fecha: hoy + ' 09:05:00' }
+      ],
+      clases: [
+        { id: 1, nombre: 'Spinning Extremo', dia: 'Lunes', horario: '07:00 - 08:00', entrenador: 'Mariana Salazar', cupo_max: 15 },
+        { id: 2, nombre: 'Funcional HIIT', dia: 'Martes', horario: '18:00 - 19:00', entrenador: 'Luis Ortega', cupo_max: 12 },
+        { id: 3, nombre: 'Taller de Fuerza', dia: 'Miércoles', horario: '17:00 - 18:30', entrenador: 'Héctor Morales', cupo_max: 10 },
+        { id: 4, nombre: 'Spinning Nocturno VIP', dia: 'Jueves', horario: '20:00 - 21:00', entrenador: 'Mariana Salazar', cupo_max: 2 }
+      ],
+      inscripciones: [
+        { id: 1, id_socio: 1, id_clase: 1, fecha: hoy, estatus: 'Confirmada' },
+        { id: 2, id_socio: 2, id_clase: 1, fecha: hoy, estatus: 'Confirmada' },
+        { id: 3, id_socio: 4, id_clase: 2, fecha: hoy, estatus: 'Confirmada' },
+        { id: 4, id_socio: 1, id_clase: 4, fecha: hoy, estatus: 'Confirmada' },
+        { id: 5, id_socio: 5, id_clase: 4, fecha: hoy, estatus: 'Confirmada' }
+      ],
+      productos: [
+        { id: 1, nombre: 'Agua Natural 1L', cat: 'Bebidas Hidratantes', precio: 20, stock: 45, min: 10 },
+        { id: 2, nombre: 'Electrolit Mora Azul 625ml', cat: 'Bebidas Hidratantes', precio: 32, stock: 24, min: 8 },
+        { id: 3, nombre: 'Scoop Proteína Whey Chocolate', cat: 'Suplementos', precio: 45, stock: 30, min: 5 },
+        { id: 4, nombre: 'Shot Pre-Entreno C4', cat: 'Suplementos', precio: 40, stock: 4, min: 5 },
+        { id: 5, nombre: 'Barra Proteína Quest Cookies', cat: 'Barras y Snacks', precio: 55, stock: 18, min: 6 },
+        { id: 6, nombre: 'Candado de Combinación Gym', cat: 'Accesorios', precio: 120, stock: 10, min: 3 }
+      ],
+      ventas: [
+        { id: 1, id_socio: 1, producto: 'Agua Natural 1L', cant: 1, total: 20, metodo: 'Efectivo' },
+        { id: 2, id_socio: null, producto: 'Electrolit Mora Azul 625ml', cant: 1, total: 32, metodo: 'Efectivo' },
+        { id: 3, id_socio: 2, producto: 'Barra Proteína Quest Cookies', cant: 1, total: 55, metodo: 'Tarjeta' }
+      ]
     };
+  }
 
-    let objetos = { tablas: [], vistas: [], consultas: [] };
-    let modo = "tablas";
+  function mostrarAlerta(texto, tipo = 'info') {
+    const contenedor = document.getElementById('sql-alert-box');
+    const div = document.createElement('div');
+    div.className = `alert-msg alert-${tipo}`;
+    div.innerHTML = texto;
+    contenedor.appendChild(div);
+    setTimeout(() => div.remove(), 5000);
+  }
 
-    function mostrarError(mensaje) {
-      errorBox.textContent = mensaje;
-      errorBox.style.display = mensaje ? "block" : "none";
+  // LOGIN / LOGOUT
+  function iniciarSesion() {
+    const u = document.getElementById('loginUser').value.trim();
+    const p = document.getElementById('loginPass').value.trim();
+    const encontrado = usuariosSistema.find(x => x.user === u && x.pass === p && x.activo);
+
+    if (!encontrado) {
+      mostrarAlerta('<strong>Acceso Denegado:</strong> Usuario o contraseña incorrectos.', 'err');
+      return;
     }
 
-    function dibujarTabla(filas) {
-      tabla.innerHTML = "";
-      info.textContent = filas.length + " registro(s)";
-      if (filas.length === 0) return;
+    sesionActual = encontrado;
+    document.getElementById('lblUsuarioActivo').textContent = sesionActual.user;
+    document.getElementById('lblRolActivo').textContent = sesionActual.rol;
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app-screen').style.display = 'block';
+    renderizarTodo();
+    mostrarAlerta(`Bienvenido <strong>${sesionActual.user}</strong> (${sesionActual.rol}).`, 'ok');
+  }
 
-      const columnas = Object.keys(filas[0]);
-      const encabezado = tabla.createTHead().insertRow();
-      for (const col of columnas) {
-        const th = document.createElement("th");
-        th.textContent = col;
-        encabezado.appendChild(th);
+  function cerrarSesion() {
+    sesionActual = null;
+    document.getElementById('loginPass').value = '';
+    document.getElementById('app-screen').style.display = 'none';
+    document.getElementById('login-screen').style.display = 'flex';
+  }
+
+  function cambiarTab(tabId, btn) {
+    document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  function nombreSocio(id) {
+    if (!id) return 'Visitante Externo';
+    const s = db.socios.find(x => x.id === id);
+    return s ? `${s.nombre} ${s.apellidos}` : 'Desconocido';
+  }
+
+  function socioTieneAcceso(id_socio) {
+    return db.suscripciones.some(sub => sub.id_socio === id_socio && sub.estado === 'Activa' && sub.fin >= hoy);
+  }
+
+  // 1. ACCESO Y CLASES
+  function registrarEntrada() {
+    const id_socio = parseInt(document.getElementById('selSocioAcceso').value);
+    if (!socioTieneAcceso(id_socio)) {
+      mostrarAlerta(`<strong>ACCESO DENEGADO (Trigger):</strong><br>${nombreSocio(id_socio)} no tiene una suscripción activa y vigente.`, 'err');
+      return;
+    }
+    const hora = new Date().toLocaleString('sv-SE');
+    db.asistencias.unshift({ id: db.asistencias.length + 1, id_socio, fecha: hora });
+    mostrarAlerta(`<strong>Entrada registrada:</strong> ${nombreSocio(id_socio)}.`, 'ok');
+    renderizarTodo();
+  }
+
+  function inscribirClase() {
+    const id_socio = parseInt(document.getElementById('selSocioClase').value);
+    const id_clase = parseInt(document.getElementById('selClase').value);
+    const clase = db.clases.find(c => c.id === id_clase);
+
+    const yaInscrito = db.inscripciones.some(i => i.id_socio === id_socio && i.id_clase === id_clase && i.fecha === hoy && i.estatus === 'Confirmada');
+    if (yaInscrito) {
+      mostrarAlerta(`<strong>Registro duplicado:</strong> ${nombreSocio(id_socio)} ya está inscrito en ${clase.nombre}.`, 'err');
+      return;
+    }
+
+    const totalInscritos = db.inscripciones.filter(i => i.id_clase === id_clase && i.fecha === hoy && i.estatus === 'Confirmada').length;
+    if (totalInscritos >= clase.cupo_max) {
+      mostrarAlerta(`<strong>CUPO LLENO (Trigger):</strong><br>La clase "${clase.nombre}" alcanzó su máximo (${clase.cupo_max}/${clase.cupo_max}).`, 'err');
+      return;
+    }
+
+    db.inscripciones.push({ id: db.inscripciones.length + 1, id_socio, id_clase, fecha: hoy, estatus: 'Confirmada' });
+    mostrarAlerta(`<strong>Inscripción exitosa:</strong> ${nombreSocio(id_socio)} en ${clase.nombre}.`, 'ok');
+    renderizarTodo();
+  }
+
+  // 2. MEMBRESÍAS, AUDITORÍA Y PAGOS
+  function contratarPlan() {
+    const id_socio = parseInt(document.getElementById('selSocioPlan').value);
+    const id_plan = parseInt(document.getElementById('selPlan').value);
+    const metodo = document.getElementById('selMetodoPlan').value;
+    const plan = db.planes.find(p => p.id === id_plan);
+
+    db.suscripciones.forEach(sub => {
+      if (sub.id_socio === id_socio && sub.estado === 'Activa') {
+        db.auditoria.unshift({
+          id_suscripcion: sub.id,
+          id_socio: sub.id_socio,
+          anterior: sub.estado,
+          nuevo: 'Vencida',
+          usuario: sesionActual.user,
+          fecha: new Date().toLocaleString('sv-SE')
+        });
+        sub.estado = 'Vencida';
       }
+    });
 
-      const cuerpo = tabla.createTBody();
-      for (const fila of filas) {
-        const tr = cuerpo.insertRow();
-        for (const col of columnas) {
-          const td = tr.insertCell();
-          if (fila[col] === null) {
-            td.textContent = "NULL";
-            td.className = "nulo";
-          } else {
-            td.textContent = fila[col];
-          }
-        }
-      }
+    const nuevaId = db.suscripciones.length + 1;
+    db.suscripciones.unshift({
+      id: nuevaId,
+      id_socio,
+      id_plan,
+      inicio: hoy,
+      fin: sumarDias(plan.dias),
+      estado: 'Activa'
+    });
+
+    db.pagos.unshift({
+      id: db.pagos.length + 1,
+      id_suscripcion: nuevaId,
+      monto: plan.precio,
+      metodo,
+      fecha: new Date().toLocaleString('sv-SE')
+    });
+
+    mostrarAlerta(`<strong>Membresía activada:</strong> ${plan.nombre} para ${nombreSocio(id_socio)} ($${plan.precio}).`, 'ok');
+    renderizarTodo();
+  }
+
+  function cambiarEstadoSuscripcion(id_sub, nuevoEstado) {
+    const sub = db.suscripciones.find(s => s.id === id_sub);
+    if (!sub || sub.estado === nuevoEstado) return;
+
+    if (nuevoEstado === 'Cancelada' && sesionActual.rol !== 'Administrador') {
+      mostrarAlerta(`<strong>Permiso denegado:</strong> Solo un <em>Administrador</em> puede cancelar membresías.`, 'err');
+      renderizarTodo();
+      return;
     }
 
-    async function pedir(url) {
-      const respuesta = await fetch(url);
-      const datos = await respuesta.json();
-      if (!respuesta.ok) throw new Error(datos.error || "Error desconocido");
-      return datos;
+    db.auditoria.unshift({
+      id_suscripcion: sub.id,
+      id_socio: sub.id_socio,
+      anterior: sub.estado,
+      nuevo: nuevoEstado,
+      usuario: sesionActual.user,
+      fecha: new Date().toLocaleString('sv-SE')
+    });
+
+    sub.estado = nuevoEstado;
+    mostrarAlerta(`<strong>Auditoría registrada:</strong> ${sesionActual.user} cambió suscripción #${sub.id} a <strong>${nuevoEstado}</strong>.`, 'info');
+    renderizarTodo();
+  }
+
+  function bloquearPago(tipo) {
+    mostrarAlerta(`<strong>OPERACIÓN PROHIBIDA (Trigger):</strong><br>Un pago registrado no puede ser ${tipo === 'editar' ? 'modificado' : 'eliminado'}.`, 'err');
+  }
+
+  // 3. VENTAS E INVENTARIO
+  function procesarVenta() {
+    const rawSocio = document.getElementById('selSocioVenta').value;
+    const id_socio = rawSocio ? parseInt(rawSocio) : null;
+    const id_prod = parseInt(document.getElementById('selProductoVenta').value);
+    const cant = parseInt(document.getElementById('inpCantidad').value);
+    const metodo = document.getElementById('selMetodoVenta').value;
+    const prod = db.productos.find(p => p.id === id_prod);
+
+    if (isNaN(cant) || cant <= 0) return;
+
+    if (prod.stock < cant) {
+      mostrarAlerta(`<strong>STOCK INSUFICIENTE (Trigger):</strong><br>Solo hay ${prod.stock} unidades de "${prod.nombre}".`, 'err');
+      return;
     }
 
-    async function cargar() {
-      mostrarError("");
-      sqlBox.style.display = "none";
-      const valor = selector.value;
-      if (!valor) return;
-      try {
-        if (modo === "consultas") {
-          const datos = await pedir("/api/consulta/" + valor);
-          dibujarTabla(datos.filas);
-          sqlBox.textContent = datos.sql;
-          sqlBox.style.display = "block";
-        } else {
-          const datos = await pedir("/api/objeto/" + encodeURIComponent(valor));
-          dibujarTabla(datos.filas);
-        }
-      } catch (error) {
-        tabla.innerHTML = "";
-        info.textContent = "";
-        mostrarError(error.message);
-      }
+    prod.stock -= cant;
+    const total = prod.precio * cant;
+    db.ventas.unshift({
+      id: db.ventas.length + 1,
+      id_socio,
+      producto: prod.nombre,
+      cant,
+      total,
+      metodo
+    });
+
+    mostrarAlerta(`<strong>Venta realizada:</strong> ${cant}x ${prod.nombre} ($${total}). Stock restante: ${prod.stock}.`, 'ok');
+    renderizarTodo();
+  }
+
+  // 4. SOCIOS E INTEGRIDAD REFERENCIAL
+  function registrarSocio() {
+    const nombre = document.getElementById('inNombre').value.trim();
+    const apellidos = document.getElementById('inApellidos').value.trim();
+    const tel = document.getElementById('inTel').value.trim();
+    const correo = document.getElementById('inCorreo').value.trim();
+
+    if (!nombre || !apellidos || !tel || !correo) {
+      mostrarAlerta('Llena todos los campos para registrar al socio.', 'err');
+      return;
+    }
+    if (db.socios.some(s => s.correo.toLowerCase() === correo.toLowerCase())) {
+      mostrarAlerta('<strong>Correo duplicado:</strong> Ya existe un socio con ese correo.', 'err');
+      return;
     }
 
-    function llenarSelector() {
-      selector.innerHTML = "";
-      const opciones = modo === "consultas"
-        ? objetos.consultas.map(c => ({ valor: c.id, texto: c.titulo }))
-        : objetos[modo].map(n => ({ valor: n, texto: n }));
-      for (const op of opciones) {
-        const option = document.createElement("option");
-        option.value = op.valor;
-        option.textContent = op.texto;
-        selector.appendChild(option);
-      }
-      cargar();
-    }
+    db.socios.push({ id: db.socios.length + 1, nombre, apellidos, tel, correo });
+    document.getElementById('inNombre').value = '';
+    document.getElementById('inApellidos').value = '';
+    document.getElementById('inTel').value = '';
+    document.getElementById('inCorreo').value = '';
+    mostrarAlerta(`Socio <strong>${nombre} ${apellidos}</strong> guardado.`, 'ok');
+    renderizarTodo();
+  }
 
-    function cambiarModo(nuevo) {
-      modo = nuevo;
-      for (const [nombre, boton] of Object.entries(botones)) {
-        boton.classList.toggle("activo", nombre === nuevo);
-      }
-      llenarSelector();
+  function eliminarSocio(id_socio) {
+    const tieneHistorial = db.suscripciones.some(s => s.id_socio === id_socio);
+    if (tieneHistorial) {
+      mostrarAlerta(`<strong>BLOQUEADO POR INTEGRIDAD REFERENCIAL (ON DELETE RESTRICT):</strong><br>No se puede borrar a ${nombreSocio(id_socio)} porque tiene historial de membresías y pagos.`, 'err');
+      return;
     }
+    db.socios = db.socios.filter(s => s.id !== id_socio);
+    mostrarAlerta('Socio sin historial eliminado correctamente.', 'ok');
+    renderizarTodo();
+  }
 
-    for (const nombre of Object.keys(botones)) {
-      botones[nombre].addEventListener("click", () => cambiarModo(nombre));
-    }
-    selector.addEventListener("change", cargar);
+  function reiniciarBD() {
+    cargarDatosIniciales();
+    renderizarTodo();
+    mostrarAlerta('Base de datos restaurada a sus datos iniciales.', 'info');
+  }
 
-    pedir("/api/objetos")
-      .then(datos => { objetos = datos; llenarSelector(); })
-      .catch(error => mostrarError("No se pudo conectar a MySQL: " + error.message));
-  </script>
+  function renderizarTodo() {
+    const optsSocios = db.socios.map(s => `<option value="${s.id}">${s.id} - ${s.nombre} ${s.apellidos}</option>`).join('');
+    ['selSocioAcceso', 'selSocioClase', 'selSocioPlan'].forEach(id => document.getElementById(id).innerHTML = optsSocios);
+    document.getElementById('selSocioVenta').innerHTML = `<option value="">-- Visitante Externo --</option>` + optsSocios;
+
+    document.getElementById('selClase').innerHTML = db.clases.map(c => {
+      const ins = db.inscripciones.filter(i => i.id_clase === c.id && i.fecha === hoy && i.estatus === 'Confirmada').length;
+      return `<option value="${c.id}">${c.nombre} (${ins}/${c.cupo_max})</option>`;
+    }).join('');
+
+    document.getElementById('selPlan').innerHTML = db.planes.map(p => `<option value="${p.id}">${p.nombre} - $${p.precio}</option>`).join('');
+    document.getElementById('selProductoVenta').innerHTML = db.productos.map(p => `<option value="${p.id}">${p.nombre} ($${p.precio} | Disp: ${p.stock})</option>`).join('');
+
+    document.getElementById('tblAsistencias').innerHTML = db.asistencias.map(a =>
+      `<tr><td>${a.id}</td><td>${nombreSocio(a.id_socio)}</td><td>${a.fecha}</td></tr>`
+    ).join('');
+
+    document.getElementById('tblClases').innerHTML = db.clases.map(c => {
+      const ins = db.inscripciones.filter(i => i.id_clase === c.id && i.fecha === hoy && i.estatus === 'Confirmada').length;
+      const lleno = ins >= c.cupo_max;
+      return `<tr>
+        <td><strong>${c.nombre}</strong></td>
+        <td>${c.dia} (${c.horario})</td>
+        <td>${c.entrenador}</td>
+        <td><span class="tag ${lleno ? 'tag-red' : 'tag-green'}">${ins} / ${c.cupo_max}</span></td>
+      </tr>`;
+    }).join('');
+
+    document.getElementById('tblSuscripciones').innerHTML = db.suscripciones.map(sub => {
+      const plan = db.planes.find(p => p.id === sub.id_plan);
+      const cls = sub.estado === 'Activa' ? 'tag-green' : (sub.estado === 'Vencida' ? 'tag-amber' : 'tag-red');
+      return `<tr>
+        <td>#${sub.id}</td>
+        <td>${nombreSocio(sub.id_socio)}</td>
+        <td>${plan ? plan.nombre : ''}</td>
+        <td>${sub.inicio}</td>
+        <td>${sub.fin}</td>
+        <td><span class="tag ${cls}">${sub.estado}</span></td>
+        <td>
+          <select onchange="cambiarEstadoSuscripcion(${sub.id}, this.value)">
+            <option value="Activa" ${sub.estado === 'Activa' ? 'selected' : ''}>Activa</option>
+            <option value="Vencida" ${sub.estado === 'Vencida' ? 'selected' : ''}>Vencida</option>
+            <option value="Cancelada" ${sub.estado === 'Cancelada' ? 'selected' : ''}>Cancelada</option>
+          </select>
+        </td>
+      </tr>`;
+    }).join('');
+
+    document.getElementById('tblAuditoria').innerHTML = db.auditoria.length
+      ? db.auditoria.map(au => `<tr><td>#${au.id_suscripcion}</td><td>${nombreSocio(au.id_socio)}</td><td>${au.anterior} → <strong>${au.nuevo}</strong></td><td>${au.usuario}</td><td>${au.fecha}</td></tr>`).join('')
+      : `<tr><td colspan="5" style="text-align:center; color:#6b7280;">Sin movimientos registrados aún.</td></tr>`;
+
+    document.getElementById('tblPagos').innerHTML = db.pagos.map(p => {
+      const sub = db.suscripciones.find(s => s.id === p.id_suscripcion);
+      return `<tr>
+        <td>#${p.id}</td>
+        <td>#${p.id_suscripcion}</td>
+        <td>${sub ? nombreSocio(sub.id_socio) : ''}</td>
+        <td>$${p.monto.toFixed(2)}</td>
+        <td>${p.metodo}</td>
+        <td>${p.fecha}</td>
+        <td>
+          <button class="btn btn-amber" onclick="bloquearPago('editar')">Editar</button>
+          <button class="btn btn-red" onclick="bloquearPago('eliminar')">Eliminar</button>
+        </td>
+      </tr>`;
+    }).join('');
+
+    document.getElementById('tblProductos').innerHTML = db.productos.map(p => {
+      const bajo = p.stock <= p.min;
+      return `<tr>
+        <td>${p.id}</td>
+        <td><strong>${p.nombre}</strong></td>
+        <td>${p.cat}</td>
+        <td>$${p.precio.toFixed(2)}</td>
+        <td><strong>${p.stock}</strong></td>
+        <td><span class="tag ${bajo ? 'tag-red' : 'tag-green'}">${bajo ? 'Stock Bajo' : 'Disponible'}</span></td>
+      </tr>`;
+    }).join('');
+
+    document.getElementById('tblVentas').innerHTML = db.ventas.map(v =>
+      `<tr><td>#${v.id}</td><td>${nombreSocio(v.id_socio)}</td><td>${v.producto}</td><td>${v.cant}</td><td>$${v.total.toFixed(2)}</td><td>${v.metodo}</td></tr>`
+    ).join('');
+
+    document.getElementById('tblSocios').innerHTML = db.socios.map(s => {
+      const ok = socioTieneAcceso(s.id);
+      return `<tr>
+        <td>${s.id}</td>
+        <td><strong>${s.nombre} ${s.apellidos}</strong></td>
+        <td>${s.tel}</td>
+        <td>${s.correo}</td>
+        <td><span class="tag ${ok ? 'tag-green' : 'tag-red'}">${ok ? 'PERMITIDO' : 'VENCIDA'}</span></td>
+        <td><button class="btn btn-red" onclick="eliminarSocio(${s.id})">Eliminar</button></td>
+      </tr>`;
+    }).join('');
+  }
+
+  cargarDatosIniciales();
+</script>
 </body>
 </html>
